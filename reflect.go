@@ -26,3 +26,7 @@ func followPointerUntil(in reflect.Value, untilKind reflect.Kind) (reflect.Value
 
 	return in, nil
 }
+
+func sliceKind(in reflect.Value) reflect.Kind {
+	return in.Type().Elem().Kind()
+}
