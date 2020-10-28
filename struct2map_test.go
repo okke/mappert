@@ -1,6 +1,9 @@
 package mappert
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestStruct2MapFollowsPointerToStruct(t *testing.T) {
 
@@ -79,6 +82,77 @@ func TestStruct2MapConvertsSliceFieldToMap(t *testing.T) {
 
 	if found := mapping["Names"].([]interface{})[1].(map[string]interface{})["Second"]; found != "peno" {
 		t.Error("expected peno as second name of second element, not", found)
+	}
+
+}
+
+func TestStruct2MapAppliesNameConvertor(t *testing.T) {
+
+	mapping, _ := Struct2Map(struct {
+		Name string
+		Sku  int
+	}{
+		Name: "chipotle", Sku: 3000,
+	}, ConvertNamesUsing(func(name string) string {
+		return strings.ToUpper(name)
+	}))
+
+	if mapping["NAME"] != "chipotle" {
+		t.Error("expected chipotle as name, not", mapping["Name"])
+	}
+
+	if mapping["SKU"] != 3000 {
+		t.Error("expected sku of 3000 as name, not", mapping["Name"])
+	}
+
+}
+
+func TestStruct2MapAppliesFieldIgnoration(t *testing.T) {
+
+	mapping, _ := Struct2Map(struct {
+		Name string
+		SKU  int
+		Like bool
+	}{
+		Name: "chipotle", SKU: 3000, Like: true,
+	}, IgnoreFields("Name", "Like"))
+
+	if _, found := mapping["Name"]; found {
+		t.Error("Did not expect a name in", mapping)
+	}
+
+	if _, found := mapping["SKU"]; !found {
+		t.Error("Did expect an SKU in", mapping)
+	}
+
+	if _, found := mapping["Like"]; found {
+		t.Error("Did expect an SKU in", mapping)
+	}
+
+}
+
+func TestStruct2MapAppliesFieldIgnorationAndNameConversion(t *testing.T) {
+
+	mapping, _ := Struct2Map(struct {
+		Name string
+		SKU  int
+		Like bool
+	}{
+		Name: "chipotle", SKU: 3000, Like: true,
+	}, IgnoreFields("Name", "Like"), ConvertNamesUsing(func(name string) string {
+		return strings.ToLower(name)
+	}))
+
+	if _, found := mapping["Name"]; found {
+		t.Error("Did not expect a name in", mapping)
+	}
+
+	if _, found := mapping["sku"]; !found {
+		t.Error("Did expect an sku in", mapping)
+	}
+
+	if _, found := mapping["Like"]; found {
+		t.Error("Did expect an SKU in", mapping)
 	}
 
 }
