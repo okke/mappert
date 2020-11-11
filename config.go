@@ -71,6 +71,10 @@ func IgnoreFields(names ...string) *MapConfiguration {
 
 func combineConfiguration(configs ...*MapConfiguration) *MapConfiguration {
 
+	if len(configs) == 1 {
+		return configs[0]
+	}
+
 	first := &MapConfiguration{}
 	if len(configs) == 0 {
 		return first

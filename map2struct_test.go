@@ -1,6 +1,9 @@
 package mappert
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestMap2StructWithPrimitives(t *testing.T) {
 
@@ -107,4 +110,61 @@ func TestMap2StructWithSliceOfStucts(t *testing.T) {
 	if name := into.Names[1].Second; name != "peno" {
 		t.Error("expected second name of second element to be peno, not", name)
 	}
+}
+
+func TestMap2StructShouldIgnoreUnknownFields(t *testing.T) {
+
+	mapping := map[string]interface{}{"Colourt": "purple"}
+
+	into := struct {
+		Colour string
+	}{}
+
+	Map2Struct(mapping, &into, IgnoreFields("SKU", "Colour"))
+
+}
+
+func TestMap2StructShouldIgnoreConfiguredFields(t *testing.T) {
+
+	mapping := map[string]interface{}{"Colour": "purple", "Name": "chipotle", "SKU": 3000}
+
+	into := struct {
+		Colour string
+		Name   string
+		SKU    int
+	}{}
+
+	Map2Struct(mapping, &into, IgnoreFields("SKU", "Colour"))
+
+	if into.Colour != "" {
+		t.Error("expected no colour but got", into.Colour)
+	}
+
+	if into.SKU != 0 {
+		t.Error("expected an sku of 0, not", into.SKU)
+	}
+
+}
+
+func TestMap2StructShouldConvertConfiguredFieldNames(t *testing.T) {
+
+	mapping := map[string]interface{}{"colour": "purple", "name": "chipotle"}
+
+	into := struct {
+		Colour string
+		Name   string
+	}{}
+
+	Map2Struct(mapping, &into, ConvertNamesUsing(func(name string) string {
+		return strings.ToUpper(name[0:1]) + name[1:]
+	}))
+
+	if into.Colour != "purple" {
+		t.Error("expected purple colour but got", into.Colour)
+	}
+
+	if into.Name != "chipotle" {
+		t.Error("expected a chipotle pepper, not", into.Name)
+	}
+
 }

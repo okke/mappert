@@ -7,10 +7,16 @@ import (
 
 // Map2Struct assigns all fields of a given struct with corresponding map data
 //
-func Map2Struct(in map[string]interface{}, out interface{}) {
+func Map2Struct(in map[string]interface{}, out interface{}, configs ...*MapConfiguration) {
+
+	config := combineConfiguration(configs...)
 
 	for key, value := range in {
-		setFieldValue(reflect.ValueOf(out).Elem(), key, reflect.ValueOf(value))
+		name := config.Name(key)
+		if config.ShouldIgnore(name) {
+			continue
+		}
+		setFieldValue(reflect.ValueOf(out).Elem(), name, reflect.ValueOf(value), config)
 	}
 }
 
@@ -29,9 +35,12 @@ func createSliceOfStructsFromSliceOfMaps(field reflect.Value, fieldValue reflect
 	return created
 }
 
-func setFieldValue(out reflect.Value, fieldName string, fieldValue reflect.Value) {
+func setFieldValue(out reflect.Value, fieldName string, fieldValue reflect.Value, config *MapConfiguration) {
 
 	field := out.FieldByName(fieldName)
+	if !field.IsValid() {
+		return
+	}
 
 	switch field.Kind() {
 	case reflect.Slice:
@@ -44,7 +53,7 @@ func setFieldValue(out reflect.Value, fieldName string, fieldValue reflect.Value
 	case reflect.Struct:
 		innerValue := reflect.New(field.Type())
 
-		Map2Struct(fieldValue.Interface().(map[string]interface{}), innerValue.Interface())
+		Map2Struct(fieldValue.Interface().(map[string]interface{}), innerValue.Interface(), config)
 
 		field.Set(innerValue.Elem())
 	default:
