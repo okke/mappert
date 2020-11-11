@@ -12,11 +12,10 @@ func Map2Struct(in map[string]interface{}, out interface{}, configs ...*MapConfi
 	config := combineConfiguration(configs...)
 
 	for key, value := range in {
-		name := config.Name(key)
-		if config.ShouldIgnore(name) {
+		if config.ShouldIgnore(key) {
 			continue
 		}
-		setFieldValue(reflect.ValueOf(out).Elem(), name, reflect.ValueOf(value), config)
+		setFieldValue(reflect.ValueOf(out).Elem(), config.Name(key), reflect.ValueOf(value), config)
 	}
 }
 
