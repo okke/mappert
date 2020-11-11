@@ -11,18 +11,18 @@ type IgnoreFieldsFunc func(string) bool
 // MapConfiguration holds mapping specific configuration parameters
 //
 type MapConfiguration struct {
-	NameConvertor NameConvertorFunc
-	IgnoreFields  IgnoreFieldsFunc
+	nameConvertor NameConvertorFunc
+	ignoreFields  IgnoreFieldsFunc
 }
 
 // And combines two configurations into one
 //
 func (config *MapConfiguration) And(other *MapConfiguration) *MapConfiguration {
-	if other.NameConvertor != nil {
-		config.NameConvertor = other.NameConvertor
+	if other.nameConvertor != nil {
+		config.nameConvertor = other.nameConvertor
 	}
-	if other.IgnoreFields != nil {
-		config.IgnoreFields = other.IgnoreFields
+	if other.ignoreFields != nil {
+		config.ignoreFields = other.ignoreFields
 	}
 	return config
 }
@@ -30,26 +30,26 @@ func (config *MapConfiguration) And(other *MapConfiguration) *MapConfiguration {
 // Name applies configuration's name convertor to given name
 //
 func (config *MapConfiguration) Name(name string) string {
-	if config.NameConvertor == nil {
+	if config.nameConvertor == nil {
 		return name
 	}
-	return config.NameConvertor(name)
+	return config.nameConvertor(name)
 }
 
 // ShouldIgnore applies configuration's field ignoration function to given name
 //
 func (config *MapConfiguration) ShouldIgnore(name string) bool {
-	if config.IgnoreFields == nil {
+	if config.ignoreFields == nil {
 		return false
 	}
-	return config.IgnoreFields(name)
+	return config.ignoreFields(name)
 }
 
 // ConvertNamesUsing creates a configuration with a name convertor
 //
 func ConvertNamesUsing(f NameConvertorFunc) *MapConfiguration {
 	return &MapConfiguration{
-		NameConvertor: f,
+		nameConvertor: f,
 	}
 }
 
@@ -62,7 +62,7 @@ func IgnoreFields(names ...string) *MapConfiguration {
 	}
 
 	return &MapConfiguration{
-		IgnoreFields: func(name string) bool {
+		ignoreFields: func(name string) bool {
 			_, found := fieldMap[name]
 			return found
 		},
