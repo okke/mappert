@@ -191,3 +191,32 @@ func TestMap2StructShouldConvertAndIgnoreConfiguredFieldNames(t *testing.T) {
 	}
 
 }
+
+func TestMap2StructShouldASpplyConfigInSlices(t *testing.T) {
+
+	mapping := map[string]interface{}{
+		"colours": []map[string]interface{}{
+			{"colour": "purple", "name": "chipotle"},
+		},
+	}
+
+	into := struct {
+		Colours []struct {
+			Colour string
+			Name   string
+		}
+	}{}
+
+	Map2Struct(mapping, &into, IgnoreFields("name"), ConvertNamesUsing(func(name string) string {
+		return strings.ToUpper(name[0:1]) + name[1:]
+	}))
+
+	if colour := into.Colours[0].Colour; colour != "purple" {
+		t.Error("expected purple colour but got", colour)
+	}
+
+	if name := into.Colours[0].Name; name != "" {
+		t.Error("expected unknown pepper, not", name)
+	}
+
+}
