@@ -57,11 +57,23 @@ func setFieldValue(out reflect.Value, fieldName string, fieldValue reflect.Value
 		field.Set(innerValue.Elem())
 	default:
 
-		if field.Kind() != fieldValue.Kind() {
-			panic(fmt.Sprintln("field", fieldName, "expects", field.Kind(), "not", fieldValue, "which is", fieldValue.Kind()))
+		if field.Type() != fieldValue.Type() {
+			converted, err := config.ConvertValue(fieldValue.Interface(), field.Type())
+
+			if err != nil {
+				panic(fmt.Sprintln("field", fieldName, "expects", field.Type(), "/", field.Kind(), "not", fieldValue, "which is", fieldValue.Type(), "/", fieldValue.Kind(), ":", err))
+			}
+
+			convertedValue := reflect.ValueOf(converted)
+
+			if field.Type() != convertedValue.Type() {
+				panic(fmt.Sprintln("field", fieldName, "expects", field.Type(), "/", field.Kind(), "not", convertedValue, "which is", convertedValue.Type(), "/", convertedValue.Kind(), "(converted from", fieldValue.Type(), "/", fieldValue.Kind(), ")"))
+			}
+			field.Set(convertedValue)
+		} else {
+			field.Set(fieldValue)
 		}
 
-		field.Set(fieldValue)
 	}
 
 }

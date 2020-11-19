@@ -220,3 +220,27 @@ func TestMap2StructShouldASpplyConfigInSlices(t *testing.T) {
 	}
 
 }
+
+func TestMap2StructShouldConvertPrimitives(t *testing.T) {
+
+	mapping := map[string]interface{}{
+		"WantString": 3000, 
+		"WantInt": "8000",
+	}
+
+	into := struct {
+		WantString string
+		WantInt    int
+	}{}
+
+	Map2Struct(mapping, &into)
+
+	if into.WantString != "3000" {
+		t.Error("expected 3000 as string but got", into.WantString)
+	}
+
+	if into.WantInt != 8000 {
+		t.Error("expected 8000 as string but got", into.WantInt)
+	}
+
+}

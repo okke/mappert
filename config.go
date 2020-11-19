@@ -1,5 +1,7 @@
 package mappert
 
+import "reflect"
+
 // NameConvertorFunc is a function which converts names between structs and maps
 //
 type NameConvertorFunc func(string) string
@@ -13,6 +15,7 @@ type IgnoreFieldsFunc func(string) bool
 type MapConfiguration struct {
 	nameConvertor NameConvertorFunc
 	ignoreFields  IgnoreFieldsFunc
+	convertor     Convertor
 }
 
 // And combines two configurations into one
@@ -23,6 +26,9 @@ func (config *MapConfiguration) And(other *MapConfiguration) *MapConfiguration {
 	}
 	if other.ignoreFields != nil {
 		config.ignoreFields = other.ignoreFields
+	}
+	if other.convertor != nil {
+		config.convertor = other.convertor
 	}
 	return config
 }
@@ -45,11 +51,35 @@ func (config *MapConfiguration) ShouldIgnore(name string) bool {
 	return config.ignoreFields(name)
 }
 
+var defaultConvertor = DefaultConvertor()
+
+// ConvertValue uses the registered value convertor or the default value convertor
+// to convert a value
+//
+func (config *MapConfiguration) ConvertValue(in interface{}, outType reflect.Type) (interface{}, error) {
+
+	useConvertor := config.convertor
+	if config.convertor == nil {
+		useConvertor = defaultConvertor
+	}
+
+	result, err := useConvertor.ConvertTo(in, outType)
+	return result, err
+}
+
 // ConvertNamesUsing creates a configuration with a name convertor
 //
 func ConvertNamesUsing(f NameConvertorFunc) *MapConfiguration {
 	return &MapConfiguration{
 		nameConvertor: f,
+	}
+}
+
+// ConvertValuesUsing creates a configuration with a value convertor
+//
+func ConvertValuesUsing(convertor Convertor) *MapConfiguration {
+	return &MapConfiguration{
+		convertor: convertor,
 	}
 }
 
