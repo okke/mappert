@@ -3,6 +3,7 @@ package mappert
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestMap2StructWithPrimitives(t *testing.T) {
@@ -223,14 +224,20 @@ func TestMap2StructShouldASpplyConfigInSlices(t *testing.T) {
 
 func TestMap2StructShouldConvertPrimitives(t *testing.T) {
 
+	now := time.Now()
+
 	mapping := map[string]interface{}{
-		"WantString": 3000, 
-		"WantInt": "8000",
+		"WantString": 3000,
+		"WantInt":    "8000",
+		"WantFloat":  188,
+		"WantTime":   now.Format(time.RFC3339),
 	}
 
 	into := struct {
 		WantString string
 		WantInt    int
+		WantFloat  float64
+		WantTime   time.Time
 	}{}
 
 	Map2Struct(mapping, &into)
@@ -240,7 +247,14 @@ func TestMap2StructShouldConvertPrimitives(t *testing.T) {
 	}
 
 	if into.WantInt != 8000 {
-		t.Error("expected 8000 as string but got", into.WantInt)
+		t.Error("expected 8000 as int but got", into.WantInt)
 	}
 
+	if into.WantFloat != 188.0 {
+		t.Error("expected 188.0 as float but got", into.WantInt)
+	}
+
+	if into.WantTime.Format(time.RFC3339) != now.Format(time.RFC3339) {
+		t.Error("expected", now.Format(time.RFC3339), " but got", into.WantTime.Format(time.RFC3339))
+	}
 }

@@ -2,8 +2,12 @@ package mappert
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
+	"time"
+
+	"github.com/relvacode/iso8601"
 )
 
 // ConvertorFunc is a function that maps a value to a value of a different type
@@ -88,15 +92,53 @@ func DefaultConvertor() Convertor {
 	convertor := &convertorMapping{}
 
 	convertor.
+		//
+		// int to ... convertors
+		//
 		RegisterConvertor(reflect.TypeOf(0), reflect.TypeOf(""), func(in interface{}) (interface{}, error) {
 			return strconv.Itoa(in.(int)), nil
 		}).
+		RegisterConvertor(reflect.TypeOf(0), reflect.TypeOf(0.0), func(in interface{}) (interface{}, error) {
+			return float64(in.(int)), nil
+		}).
+		//
+		// float to ... convertors
+		//
+		RegisterConvertor(reflect.TypeOf(0.0), reflect.TypeOf(""), func(in interface{}) (interface{}, error) {
+			return fmt.Sprintf("%f", in), nil
+		}).
+		RegisterConvertor(reflect.TypeOf(0.0), reflect.TypeOf(0), func(in interface{}) (interface{}, error) {
+			return int(math.Round(in.(float64))), nil
+		}).
+		//
+		// string to ... convertors
+		//
 		RegisterConvertor(reflect.TypeOf(""), reflect.TypeOf(0), func(in interface{}) (interface{}, error) {
 			i, err := strconv.ParseInt(in.(string), 10, 64)
 			if err != nil {
 				return 0, err
 			}
 			return int(i), err
+		}).
+		RegisterConvertor(reflect.TypeOf(""), reflect.TypeOf(0.0), func(in interface{}) (interface{}, error) {
+			f, err := strconv.ParseFloat(in.(string), 64)
+			if err != nil {
+				return 0.0, err
+			}
+			return float64(f), err
+		}).
+		RegisterConvertor(reflect.TypeOf(""), reflect.TypeOf(time.Time{}), func(in interface{}) (interface{}, error) {
+			t, err := iso8601.ParseString(in.(string))
+			if err != nil {
+				return time.Time{}, err
+			}
+			return t, err
+		}).
+		//
+		// time.Time to ... convertors
+		//
+		RegisterConvertor(reflect.TypeOf(time.Time{}), reflect.TypeOf(""), func(in interface{}) (interface{}, error) {
+			return in.(time.Time).Format(time.RFC3339), nil
 		})
 
 	return convertor
